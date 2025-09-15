@@ -67,4 +67,8 @@ Route::middleware('auth')->group(function () {
 Route::post('/shorten', [App\Http\Controllers\LinkController::class, 'shorten'])->name('shorten');
 Route::get('/{code}',   [App\Http\Controllers\LinkController::class, 'redirect'])->name('redirect');
 
+Route::get('/verifica-acesso/{shortCode}', [App\Http\Controllers\LinkController::class, 'returnVerifyPage'])->name('admin.links.verify');
+Route::post('/verifica-acesso/{shortCode}', [App\Http\Controllers\LinkController::class, 'verifyAccess'])->name('admin.links.verify_access');
+
+
 require __DIR__.'/auth.php';

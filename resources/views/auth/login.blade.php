@@ -56,18 +56,7 @@
         @enderror
       </div>
 
-      <!-- Remember Me -->
-      <div class="mb-4 flex items-center">
-        <input id="remember_me" type="checkbox" name="remember"
-          class="rounded border-gray-300 text-[#2ECC71] focus:ring-[#2ECC71]">
-        <label for="remember_me" class="ml-2 text-gray-600">Lembrar-me</label>
-      </div>
-
-      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-        @if (Route::has('password.request'))
-          <a href="{{ route('password.request') }}"
-            class="text-sm text-gray-600 hover:underline">Esqueceu sua senha?</a>
-        @endif
+      <div class="flex justify-center">
         <button type="submit"
           class="bg-[#2ECC71] hover:bg-[#27ae60] text-white px-6 py-3 rounded-xl font-semibold transition">
           Entrar

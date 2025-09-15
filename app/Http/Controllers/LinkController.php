@@ -89,48 +89,18 @@ class LinkController extends Controller
     public function redirect($shortCode)
     {
         $link = Link::where('short_code', $shortCode)->firstOrFail();
-
-        // Verifica se o link está expirado
         if ($link->expires_at && now()->greaterThan($link->expires_at)) {
             return response()->view('admin.links.errors.401', [], 401);
         }
 
-        // Atualiza contador total
-        $link->increment('clicks');
+        if ($link->password) {
 
-        // Detecta device e browser
-        $agent = new Agent();
-        $agent->setUserAgent(request()->userAgent());
+            return redirect()->route('admin.links.verify', ['shortCode' => $shortCode]);
+        }
 
-        $device = 'desktop';
-        if ($agent->isMobile())
-            $device = 'smartphone';
-        elseif ($agent->isTablet())
-            $device = 'tablet';
-
-        // Geolocalização aproximada via IP (ex: usando stevebauman/location)
-        $location = Location::get('138.185.40.154');
-        LinkClick::create([
-            'link_id' => $link->id,
-            'country' => $location->countryName ?? null,
-            'region' => $location->regionName ?? null,
-            'city' => $location->cityName ?? null,
-            'device' => $device,
-            'os' => $agent->platform(),
-            'os_version' => $agent->version($agent->platform()),
-            'browser' => $agent->browser(),
-            'browser_version' => $agent->version($agent->browser()),
-            'language' => substr(request()->server('HTTP_ACCEPT_LANGUAGE') ?? 'unknown', 0, 5),
-            'referrer' => request()->server('HTTP_REFERER'),
-            'clicked_at' => now(),
-        ]);
-
-        // Emitir evento para Echo atualizar relatórios em tempo real
-        broadcast(new LinkClicksUpdated());
-        broadcast(new LinkAccessed($link, $link->original_url));
-
-        return redirect()->away($link->original_url);
+        return $this->processRedirect($link);
     }
+
 
     public function edit(Request $request, $id)
     {
@@ -149,8 +119,8 @@ class LinkController extends Controller
                     ['short_code', '=', $shortCode],
                     ['company_id', '=', Auth()->user()->company_id]
                 ])
-                ->where('id', '!=', $link->id)
-                ->exists()
+                    ->where('id', '!=', $link->id)
+                    ->exists()
             ) {
                 return response()->json(['error' => 'O código curto personalizado já está em uso.'], 409);
             }
@@ -181,7 +151,7 @@ class LinkController extends Controller
         }
 
         $link->tags()->sync($tagsIds);
-        return redirect()->route('dashboard')->with('success', 'Link atualizado com sucesso!');        
+        return redirect()->route('dashboard')->with('success', 'Link atualizado com sucesso!');
     }
 
     public function destroy($id)
@@ -270,10 +240,65 @@ class LinkController extends Controller
             'locations'
         ));
     }
-
     public function generateShortCode()
     {
         return Str::random(6);
     }
+
+    public function returnVerifyPage(Request $request, $shortCode)
+    {
+        return view('admin.links.verify', compact('shortCode'));
+    }
+
+    public function verifyAccess(Request $request, $shortCode)
+    {
+        $link = Link::where('short_code', $shortCode)->firstOrFail();
+
+        if ($link->password !== $request->password) {
+            return back()->withErrors(['password' => 'Senha incorreta.']);
+        }
+
+        return $this->processRedirect($link);
+    }
+
+    private function processRedirect(Link $link)
+    {
+        // Atualiza contador total
+        $link->increment('clicks');
+
+        // Detecta device e browser
+        $agent = new Agent();
+        $agent->setUserAgent(request()->userAgent());
+
+        $device = 'desktop';
+        if ($agent->isMobile())
+            $device = 'smartphone';
+        elseif ($agent->isTablet())
+            $device = 'tablet';
+
+        // Geolocalização aproximada
+        $location = Location::get(request()->ip());
+
+        LinkClick::create([
+            'link_id' => $link->id,
+            'country' => $location->countryName ?? null,
+            'region' => $location->regionName ?? null,
+            'city' => $location->cityName ?? null,
+            'device' => $device,
+            'os' => $agent->platform(),
+            'os_version' => $agent->version($agent->platform()),
+            'browser' => $agent->browser(),
+            'browser_version' => $agent->version($agent->browser()),
+            'language' => substr(request()->server('HTTP_ACCEPT_LANGUAGE') ?? 'unknown', 0, 5),
+            'referrer' => request()->server('HTTP_REFERER'),
+            'clicked_at' => now(),
+        ]);
+
+        // Emitir evento para Echo
+        broadcast(new LinkClicksUpdated());
+        broadcast(new LinkAccessed($link, $link->original_url));
+        return redirect()->away($link->original_url);
+    }
+
 }
 

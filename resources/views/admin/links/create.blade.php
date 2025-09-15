@@ -42,7 +42,7 @@
                                     <i class="fa fa-question-circle text-success ms-1" data-bs-toggle="tooltip"
                                         title="Defina uma senha para proteger este link. Somente quem souber a senha poderá acessá-lo."></i>
                                 </label>
-                                <input type="text" id="pa" name="password" class="form-control" placeholder="Digite uma senha">
+                                <input type="text" id="password" name="password" class="form-control" placeholder="Digite uma senha">
                             </div>
 
                             <!-- Expiração -->
