@@ -11,7 +11,7 @@
             <h2 class="fw-bold text-dark mb-0">
                 <i class="fas fa-link text-success me-2"></i> Links Criados
             </h2>
-            <a href="#" class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#createLinkModal">
+            <a href="#" class="btn btn-success shadow-sm create-edit-link" data-bs-toggle="modal" data-bs-target="#createLinkModal" data-action="{{ route('shorten') }}">
                 <i class="fas fa-plus-circle me-1"></i> Criar Link
             </a>
         </div>
@@ -60,8 +60,10 @@
                                                     data-short_code="{{ $link->short_code }}" data-expire="{{ $link->expire_at }}"
                                                     data-tags='@json($link->tags->pluck("id"))'
                                                     data-password="{{ $link->password ?? '' }}"
-                                                    data-description="{{ $link->description ?? ''}}" title="Editar">
-                                                    <i class="fas fa-edit"></i>
+                                                    data-description="{{ $link->description ?? ''}}"
+                                                    data-action="{{ route('links.edit', $link) }}"
+                                                    title="Editar">
+                                                    <i class="fas fa-edit create-edit-link"></i>
                                                 </a>
 
                                                 <form action="{{ route('links.destroy', $link) }}" method="POST" class="d-inline">
@@ -162,8 +164,10 @@
                     language: { url: "https://cdn.datatables.net/plug-ins/1.13.8/i18n/pt-BR.json" }
                 });
 
-                // Guarda o action original do formulário
-                const originalFormAction = $('#createLinkForm').attr('action');
+                $(document).on('click', '.create-edit-link', function () {
+                    const action = $(this).data('action');
+                    $('#createLinkForm').attr('action', action).attr('method', 'POST');
+                });
 
                 // Editar link
                 $(document).on('click', '.edit-link-btn', function (e) {
@@ -213,10 +217,6 @@
                         modal.find('button[type="submit"]').text('Criar Link');
                         modal.find('input[name="_method"]').remove();
                         modal.find('textarea[name="description"]').val('');
-
-
-                        // **Restaurar action original do formulário**
-                        $('#createLinkForm').attr('action', originalFormAction).attr('method', 'POST');
                     }
                 });
 
