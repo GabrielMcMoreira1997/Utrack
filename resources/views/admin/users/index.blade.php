@@ -6,61 +6,97 @@
 <section class="content pt-3">
     <div class="container-fluid">
 
+        {{-- Mensagem de sucesso --}}
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title">Usuários</h3>
-                <a href="{{ route('users.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Novo Usuário
-                </a>
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($users as $user)
-                        <tr>
-                            <td>{{ $user->id }}</td>
-                            <td>{{ $user->name }}</td>
-                            <td>{{ $user->email }}</td>
-                            <td>{{ $user->role->name ?? '-' }}</td>
-                            <td>
-                                <a href="{{ route('users.show', $user->id) }}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('users.edit', $user->id) }}" class="btn btn-warning btn-sm">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline"
-                                      onsubmit="return confirm('Tem certeza que deseja excluir este usuário?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+        {{-- Cabeçalho --}}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-dark mb-0">
+                <i class="fas fa-users text-success me-2"></i> Usuários
+            </h2>
+            <a href="{{ route('users.create') }}" class="btn btn-success shadow-sm">
+                <i class="fas fa-plus-circle me-1"></i> Novo Usuário
+            </a>
+        </div>
 
-                <div class="mt-3">
-                    {{ $users->links() }}
-                </div>
+        {{-- Card com a tabela --}}
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-body p-0">
+                @if($users->count())
+                    <div class="table-responsive p-3">
+                        <table id="usersTable" class="table table-striped table-hover align-middle w-100">
+                            <thead style="background-color: #D5F5E3;">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($users as $user)
+                                <tr data-role="{{ $user->role->name ?? '' }}">
+                                    <td>{{ $user->id }}</td>
+                                    <td>{{ $user->name }}</td>
+                                    <td>{{ $user->email }}</td>
+                                    <td>{{ $user->role->name ?? '-' }}</td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <a href="{{ route('users.show', $user->id) }}" class="btn btn-sm btn-outline-success" title="Visualizar">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline"
+                                                  onsubmit="return confirm('Tem certeza que deseja excluir este usuário?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="p-5 text-center text-muted">
+                        <i class="fas fa-user-friends fa-3x mb-3" style="color: #2ECC71;"></i>
+                        <p class="mb-2">Nenhum usuário cadastrado ainda.</p>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 </section>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+
+
+        // Inicializa DataTable
+        var table = $('#usersTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json"
+            },
+            "pageLength": 10,
+            "lengthChange": false,
+            "ordering": true,
+            "columnDefs": [
+                { "orderable": false, "targets": 4 }
+            ]
+        });
+
+ 
+    });
+</script>
 @endsection

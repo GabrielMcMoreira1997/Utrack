@@ -17,8 +17,8 @@ class UserController extends Controller
     {
         // Lista usuários com role (eager loading)
         $users = User::where('company_id', Auth()->user()->company_id)->with(['role'])->paginate(10);
-
-        return view('admin.users.index', compact('users'));
+        $roles = Role::where('company_id', Auth()->user()->company_id)->get();
+        return view('admin.users.index', compact('users', 'roles'));
     }
 
     /**

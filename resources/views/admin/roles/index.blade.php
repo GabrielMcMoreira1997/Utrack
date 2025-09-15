@@ -6,51 +6,92 @@
 <section class="content pt-3">
     <div class="container-fluid">
 
+        {{-- Mensagem de sucesso --}}
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title">Roles</h3>
-                <a href="{{ route('roles.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Nova Role
-                </a>
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Nome</th>
-                            <th>Slug</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($roles as $role)
-                        <tr>
-                            <td>{{ $role->id }}</td>
-                            <td>{{ $role->name }}</td>
-                            <td>{{ $role->slug }}</td>
-                            <td>
-                                <a href="{{ route('roles.show', $role->id) }}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
-                                <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
-                                <form action="{{ route('roles.destroy', $role->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Excluir esta role?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+        {{-- Cabeçalho --}}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-dark mb-0">
+                <i class="fas fa-user-shield text-success me-2"></i> Roles
+            </h2>
+            <a href="{{ route('roles.create') }}" class="btn btn-success shadow-sm">
+                <i class="fas fa-plus-circle me-1"></i> Nova Role
+            </a>
+        </div>
 
-                <div class="mt-3">{{ $roles->links() }}</div>
+        {{-- Card com a tabela --}}
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-body p-0">
+                @if($roles->count())
+                    <div class="table-responsive p-3">
+                        <table id="rolesTable" class="table table-striped table-hover align-middle w-100">
+                            <thead style="background-color: #D5F5E3;">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nome</th>
+                                    <th>Slug</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($roles as $role)
+                                <tr>
+                                    <td>{{ $role->id }}</td>
+                                    <td>{{ $role->name }}</td>
+                                    <td>{{ $role->slug }}</td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <a href="{{ route('roles.show', $role->id) }}" class="btn btn-sm btn-outline-success" title="Visualizar">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="{{ route('roles.destroy', $role->id) }}" method="POST" class="d-inline"
+                                                  onsubmit="return confirm('Tem certeza que deseja excluir esta role?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="p-5 text-center text-muted">
+                        <i class="fas fa-user-shield fa-3x mb-3" style="color: #2ECC71;"></i>
+                        <p class="mb-2">Nenhuma role cadastrada ainda.</p>
+                    </div>
+                @endif
             </div>
         </div>
 
     </div>
 </section>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        // Inicializa DataTable
+        $('#rolesTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json"
+            },
+            "pageLength": 10,
+            "lengthChange": false,
+            "ordering": true,
+            "columnDefs": [
+                { "orderable": false, "targets": 3 } // Ações não ordenáveis
+            ]
+        });
+    });
+</script>
 @endsection
