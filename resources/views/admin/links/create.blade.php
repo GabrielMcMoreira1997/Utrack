@@ -117,17 +117,4 @@ document.addEventListener("DOMContentLoaded", function () {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     })
 });
-
-$('#createLinkModal').on('show.bs.modal', function () {
-    const modal = $(this);
-    if (!modal.hasClass('editing')) {
-        modal.find('#url, #short_code, #expire_at, #password, textarea[name="comments"]').val('');
-        modal.find('#tags').val([]).trigger('change');
-        modal.find('#qrCodePreview').html('<span class="text-muted">[ Preview QR ]</span>');
-        modal.find('#url').prop('readonly', false);
-        modal.find('.modal-title').text('Novo Link');
-        modal.find('button[type="submit"]').text('Criar Link');
-        modal.find('input[name="_method"]').remove();
-    }
-});
 </script>

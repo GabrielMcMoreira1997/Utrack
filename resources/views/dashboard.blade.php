@@ -11,9 +11,55 @@
             <h2 class="fw-bold text-dark mb-0">
                 <i class="fas fa-link text-success me-2"></i> Links Criados
             </h2>
-            <a href="#" class="btn btn-success shadow-sm create-edit-link" data-bs-toggle="modal" data-bs-target="#createLinkModal" data-action="{{ route('shorten') }}">
+            <a href="#" class="btn btn-success shadow-sm create-edit-link" data-bs-toggle="modal"
+                data-bs-target="#createLinkModal" data-action="{{ route('shorten') }}">
                 <i class="fas fa-plus-circle me-1"></i> Criar Link
             </a>
+        </div>
+
+        {{-- Filtros --}}
+        <div class="card border-0 shadow-sm rounded-3 mb-3">
+            <div class="card-body">
+                <form id="filterForm" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="filterAuthor" class="form-label">Autor</label>
+                        <select id="filterAuthor" class="form-select tom-select">
+                            <option value="">Todos</option>
+                            @foreach($authors as $author)
+                                <option value="{{ $author->id }}">{{ $author->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filterRole" class="form-label">Role</label>
+                        <select id="filterRole" class="form-select tom-select">
+                            <option value="">Todos</option>
+                            @foreach($roles as $role)
+                                <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filterTags" class="form-label">Tags</label>
+                        <select id="filterTags" class="form-select tom-select" multiple>
+                            @foreach($allTags as $tag)
+                                <option value="{{ $tag->id }}">{{ $tag->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Data de Criação</label>
+                        <div class="d-flex gap-2">
+                            <input type="date" id="filterStart" class="form-control">
+                            <input type="date" id="filterEnd" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col-12 d-flex justify-content-end">
+                        <button type="button" id="resetFilters" class="btn btn-outline-secondary me-2">Limpar</button>
+                        <button type="button" id="applyFilters" class="btn btn-success">Aplicar</button>
+                    </div>
+                </form>
+            </div>
         </div>
 
         <div class="card border-0 shadow-sm rounded-3">
@@ -33,7 +79,8 @@
                             </thead>
                             <tbody>
                                 @foreach($links as $link)
-                                    <tr>
+                                    <tr data-tags='@json($link->tags->pluck("id"))' data-author-id="{{ $link->author_id }}"
+                                        data-role="{{ $link->author->role->name ?? '' }}">
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <a href="{{ $link->company->domain . '/' . $link->short_code }}" target="_blank"
@@ -61,8 +108,7 @@
                                                     data-tags='@json($link->tags->pluck("id"))'
                                                     data-password="{{ $link->password ?? '' }}"
                                                     data-description="{{ $link->description ?? ''}}"
-                                                    data-action="{{ route('links.edit', $link) }}"
-                                                    title="Editar">
+                                                    data-action="{{ route('links.edit', $link) }}" title="Editar">
                                                     <i class="fas fa-edit create-edit-link"></i>
                                                 </a>
 
@@ -158,10 +204,19 @@
 
             $(document).ready(function () {
                 // DataTable
-                $('#linksTable').DataTable({
+                var table = $('#linksTable').DataTable({
                     pageLength: 10,
                     order: [[3, 'desc']],
                     language: { url: "https://cdn.datatables.net/plug-ins/1.13.8/i18n/pt-BR.json" }
+                });
+
+                document.querySelectorAll('.tom-select').forEach(el => {
+                    new TomSelect(el, {
+                        create: false,
+                        persist: false,
+                        plugins: ['remove_button'],
+                        placeholder: 'Selecione...',
+                    });
                 });
 
                 $(document).on('click', '.create-edit-link', function () {
@@ -285,6 +340,50 @@
                         document.body.appendChild(toast);
                         setTimeout(() => toast.remove(), 2000);
                     } catch (err) { alert('Falha ao copiar QR Code.'); console.error(err); }
+                });
+
+                // Filtro customizado
+                $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                    const author = $('#filterAuthor').val();
+                    const role = $('#filterRole').val();
+                    const tags = $('#filterTags').val() || [];
+                    const start = $('#filterStart').val();
+                    const end = $('#filterEnd').val();
+
+                    const row = table.row(dataIndex).data();
+
+                    // Data da criação (coluna 4, zero-indexed)
+                    const createdAt = row[4] ? new Date(row[4]) : null;
+                    const startDate = start ? new Date(start) : null;
+                    const endDate = end ? new Date(end) : null;
+                    if ((startDate && (!createdAt || createdAt < startDate)) ||
+                        (endDate && (!createdAt || createdAt > endDate))) return false;
+
+                    // Autor (você precisa ter o ID do autor em uma coluna oculta ou data-attribute)
+                    if (author && $(table.row(dataIndex).node()).data('author-id') != author) return false;
+
+                    // Role (idem autor)
+                    if (role && $(table.row(dataIndex).node()).data('role') != role) return false;
+
+                    // Tags (múltiplas) - assume que você armazenou data-tags na <tr> como array JSON
+                    if (tags.length) {
+                        const rowTags = $(table.row(dataIndex).node()).data('tags') || [];
+                        if (!tags.some(tag => rowTags.includes(parseInt(tag)))) return false;
+                    }
+
+                    return true;
+                });
+
+                // Aplicar filtros
+                $('#applyFilters').on('click', function () { table.draw(); });
+
+                // Limpar filtros
+                $('#resetFilters').on('click', function () {
+                    $('#filterForm').trigger('reset');
+                    $('.tom-select').each(function () {
+                        if (this.tomselect) this.tomselect.clear();
+                    });
+                    table.draw();
                 });
 
             });
