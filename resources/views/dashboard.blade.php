@@ -54,8 +54,8 @@
                             <input type="date" id="filterEnd" class="form-control">
                         </div>
                     </div>
-                    <div class="col-12 d-flex justify-content-end">
-                        <button type="button" id="resetFilters" class="btn btn-outline-secondary me-2">Limpar</button>
+                    <div class="col-12 d-flex justify-content-end mt-2">
+                        <button type="button" id="resetFilters" class="btn btn-outline-secondary mx-2">Limpar</button>
                         <button type="button" id="applyFilters" class="btn btn-success">Aplicar</button>
                     </div>
                 </form>

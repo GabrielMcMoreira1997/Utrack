@@ -16,6 +16,10 @@ Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
 
+Route::get('teste', function () {
+    return view('teste');
+})->name('teste');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -27,9 +31,24 @@ Route::middleware('auth')->group(function () {
         Route::put('/{id}', [App\Http\Controllers\LinkController::class, 'edit'])->name('links.edit');
         Route::delete('/{id}', [App\Http\Controllers\LinkController::class, 'destroy'])->name('links.destroy');
 
-        Route::get('/report', [App\Http\Controllers\LinkController::class, 'report'])->name('links.report');
         Route::post('/qr-code', [App\Http\Controllers\QrCodeController::class, 'generate'])->name('generate.qr');
         Route::post('/generate-short-code', [App\Http\Controllers\LinkController::class, 'generateShortCode'])->name('generate.short_code');
+
+        Route::prefix('reports')->group(function () {
+            Route::get('/realtime-access', [App\Http\Controllers\ReportController::class, 'realtimeAccess'])->name('links.reports.realtime_access');
+
+            Route::get('/usage', [App\Http\Controllers\ReportController::class, 'usage'])->name('reports.usage');
+            Route::get('/usage-stats', [App\Http\Controllers\ReportController::class, 'usageStats'])->name('reports.usage_stats');
+            Route::get('/locations', [App\Http\Controllers\ReportController::class, 'locations'])->name('reports.locations');
+            Route::get('/locations/stats', [App\Http\Controllers\ReportController::class, 'locationsStats'])->name('reports.locations_stats');
+            Route::get('/hourly-access', [App\Http\Controllers\ReportController::class, 'hourlyAccess'])->name('reports.hourly_access');
+            Route::get('/hourly-access/stats', [App\Http\Controllers\ReportController::class, 'hourlyAccessStats'])->name('reports.hourly_access_stats');
+            Route::get('/referrer', [App\Http\Controllers\ReportController::class, 'referrerAccess'])->name('reports.referrer');
+            Route::get('/referrer/stats', [App\Http\Controllers\ReportController::class, 'referrerAccessStats'])->name('reports.referrer_stats');
+            Route::get('/recent-vs-old', [App\Http\Controllers\ReportController::class, 'recentVsOld'])->name('reports.recent_vs_old');
+            Route::get('/recent-vs-old/stats', [App\Http\Controllers\ReportController::class, 'recentVsOldStats'])->name('reports.recent_vs_old_stats');
+
+        });
 
     });
 
@@ -65,10 +84,10 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::post('/shorten', [App\Http\Controllers\LinkController::class, 'shorten'])->name('shorten');
-Route::get('/{code}',   [App\Http\Controllers\LinkController::class, 'redirect'])->name('redirect');
+Route::get('/{code}', [App\Http\Controllers\LinkController::class, 'redirect'])->name('redirect');
 
 Route::get('/verifica-acesso/{shortCode}', [App\Http\Controllers\LinkController::class, 'returnVerifyPage'])->name('admin.links.verify');
 Route::post('/verifica-acesso/{shortCode}', [App\Http\Controllers\LinkController::class, 'verifyAccess'])->name('admin.links.verify_access');
 
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

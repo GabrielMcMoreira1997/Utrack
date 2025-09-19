@@ -11,6 +11,8 @@ class LinkClick extends Model
         'country',
         'region',
         'city',
+        'latitude',
+        'longitude',
         'device',
         'os',
         'os_version',
@@ -20,6 +22,7 @@ class LinkClick extends Model
         'referrer',
         'clicked_at',
     ];
+
 
     public function link()
     {

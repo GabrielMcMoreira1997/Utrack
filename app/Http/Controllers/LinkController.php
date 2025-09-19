@@ -12,8 +12,7 @@ use Jenssegers\Agent\Agent;
 use Stevebauman\Location\Facades\Location;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
-
-
+use App\Helpers\UtilsHelper;
 
 class LinkController extends Controller
 {
@@ -89,18 +88,17 @@ class LinkController extends Controller
     public function redirect($shortCode)
     {
         $link = Link::where('short_code', $shortCode)->firstOrFail();
+
         if ($link->expires_at && now()->greaterThan($link->expires_at)) {
             return response()->view('admin.links.errors.401', [], 401);
         }
 
         if ($link->password) {
-
             return redirect()->route('admin.links.verify', ['shortCode' => $shortCode]);
         }
 
         return $this->processRedirect($link);
     }
-
 
     public function edit(Request $request, $id)
     {
@@ -276,29 +274,33 @@ class LinkController extends Controller
         elseif ($agent->isTablet())
             $device = 'tablet';
 
-        // Geolocalização aproximada
-        $location = Location::get(request()->ip());
+        // Geolocalização aproximada (usar IP real do request em produção)
+        $location = Location::get('138.185.40.154');
 
         LinkClick::create([
             'link_id' => $link->id,
             'country' => $location->countryName ?? null,
             'region' => $location->regionName ?? null,
             'city' => $location->cityName ?? null,
+            'latitude' => $location->latitude ?? null,
+            'longitude' => $location->longitude ?? null,
             'device' => $device,
             'os' => $agent->platform(),
             'os_version' => $agent->version($agent->platform()),
             'browser' => $agent->browser(),
             'browser_version' => $agent->version($agent->browser()),
             'language' => substr(request()->server('HTTP_ACCEPT_LANGUAGE') ?? 'unknown', 0, 5),
-            'referrer' => request()->server('HTTP_REFERER'),
+            'referrer' => getReferrer(request()),
             'clicked_at' => now(),
         ]);
 
         // Emitir evento para Echo
         broadcast(new LinkClicksUpdated());
-        broadcast(new LinkAccessed($link, $link->original_url));
+        broadcast(new LinkAccessed($link, $location, $device, $agent));
+
         return redirect()->away($link->original_url);
     }
+
 
 }
 
