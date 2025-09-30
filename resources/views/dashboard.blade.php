@@ -222,6 +222,7 @@
                 $(document).on('click', '.create-edit-link', function () {
                     const action = $(this).data('action');
                     $('#createLinkForm').attr('action', action).attr('method', 'POST');
+                    $('#createLinkModal').modal('show'); // Ensure modal opens
                 });
 
                 // Editar link
