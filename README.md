@@ -52,6 +52,7 @@ O Utrack oferece relatórios detalhados para análise de acessos:
    Compare períodos específicos e visualize tendências de acessos.
    ![Relatório por Intervalo de Datas](readme_assets/report-by-range.png)
 
+Há outros relatórios que exibem outras informações
 ---
 
 ## 🖼️ Interface do Sistema
@@ -171,8 +172,3 @@ O Utrack oferece relatórios detalhados para análise de acessos:
 * Estrutura escalável para empresas de diferentes portes.
 * Onboarding simplificado em **3 etapas**.
 
----
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Consulte o arquivo `LICENSE` para mais detalhes.
